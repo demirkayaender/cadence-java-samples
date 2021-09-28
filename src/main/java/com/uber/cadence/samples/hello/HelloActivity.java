@@ -22,12 +22,14 @@ import static com.uber.cadence.samples.common.SampleConstants.DOMAIN;
 import com.uber.cadence.activity.ActivityMethod;
 import com.uber.cadence.client.WorkflowClient;
 import com.uber.cadence.client.WorkflowClientOptions;
+import com.uber.cadence.client.WorkflowOptions;
 import com.uber.cadence.serviceclient.ClientOptions;
 import com.uber.cadence.serviceclient.WorkflowServiceTChannel;
 import com.uber.cadence.worker.Worker;
 import com.uber.cadence.worker.WorkerFactory;
 import com.uber.cadence.workflow.Workflow;
 import com.uber.cadence.workflow.WorkflowMethod;
+import java.time.Duration;
 
 /**
  * Hello World Cadence workflow that executes a single activity. Requires a local instance the
@@ -94,7 +96,15 @@ public class HelloActivity {
     factory.start();
 
     // Get a workflow stub using the same task list the worker uses.
-    GreetingWorkflow workflow = workflowClient.newWorkflowStub(GreetingWorkflow.class);
+    WorkflowOptions workflowOptions =
+        new WorkflowOptions.Builder()
+            .setTaskList(TASK_LIST)
+            .setDelayStart(Duration.ofSeconds(1))
+            .setTaskStartToCloseTimeout(Duration.ofSeconds(30))
+            .build();
+    // Get a workflow stub using the same task list the worker uses.
+    GreetingWorkflow workflow =
+        workflowClient.newWorkflowStub(GreetingWorkflow.class, workflowOptions);
     // Execute a workflow waiting for it to complete.
     String greeting = workflow.getGreeting("World");
     System.out.println(greeting);
